@@ -51,21 +51,19 @@ def create_8_puzzle_problem():
     while not solvable:
         random.shuffle(puzzle)
         solvable = is_solvable(puzzle[:])
-    return puzzle
+    return tuple(puzzle)
 
 
 # Checks if the given puzzle configuration is solvable
 def is_solvable(puzzle):
     inversions = 0
-    for i in range(len(puzzle) - 1):
-        current_value = puzzle[i]
-        if current_value == 0:
-            continue  # Skip the blank tile
+    for i in range(len(puzzle)):
+        if puzzle[i] == 0:
+            continue
         for j in range(i + 1, len(puzzle)):
-            next_value = puzzle[j]
-            if next_value == 0:
-                continue  # Skip the blank tile
-            if current_value > next_value:
+            if puzzle[j] == 0:
+                continue
+            if puzzle[i] > puzzle[j]:
                 inversions += 1
     return inversions % 2 == 1
 
@@ -74,7 +72,10 @@ def is_solvable(puzzle):
 def create_permutations(state):
     result = []
     for permutation in permutations(state):
-        result.append(permutation)
+        # This saves time later when creating the edges for the graph; the unsolvable states are unreachable anyway,
+        # so removing them here will improve our graph generation time
+        if is_solvable(permutation):
+            result.append(permutation)
     return result
 
 
@@ -154,23 +155,23 @@ def create_graph():
     for permutation in create_permutations(puzzle):
         node = Node(permutation)
         g.add_node(node)
+    create_edges(g)
     return g
 
 
-# Creates multiple graphs and benchmarks the time
-def create_and_benchmark_graphs(num_graphs):
-    graphs = []
+# Creates the "graph" and puzzles and benchmarks the time
+def create_and_benchmark_puzzles(num_puzzles):
+    graph = create_graph()
+    puzzles = []
     timer_start = time.process_time()
-    for i in range(num_graphs):
-        graph = create_graph()
-        create_edges(graph)
-        print("Graph", i + 1, "created based on puzzle:", next(iter(graph.nodes)))
-        graphs.append(graph)
-    print(f"Total time to generate all graphs: {(time.process_time() - timer_start):.4f} seconds")
-    return graphs
+    for i in range(num_puzzles):
+        puzzles.append(create_8_puzzle_problem())
+        print("Puzzle", i + 1, "created")
+    print(f"Total time to generate all puzzles: {(time.process_time() - timer_start):.4f} seconds")
+    return graph, puzzles
 
 
-def run_and_benchmark_algorithms(graphs):
+def run_and_benchmark_algorithms(graph, puzzles):
     algorithms = ['DFS', 'UCS', 'BFS', 'ASTAR']
 
     for algorithm in algorithms:
@@ -182,7 +183,7 @@ def run_and_benchmark_algorithms(graphs):
         worst_nodes_visited = float('-inf')
         total_nodes_visited = 0
 
-        for index, graph in enumerate(graphs):
+        for index, puzzle in enumerate(puzzles):
             nodes_visited = 0
             timer_start = time.process_time()
 
@@ -193,7 +194,7 @@ def run_and_benchmark_algorithms(graphs):
                 case 'BFS': algorithm_func = bfs
                 case 'ASTAR': algorithm_func = astar
 
-            nodes_visited += algorithm_func(graph)
+            nodes_visited += algorithm_func(graph, puzzle)
 
             elapsed_time = time.process_time() - timer_start
 
@@ -210,8 +211,8 @@ def run_and_benchmark_algorithms(graphs):
             if nodes_visited > worst_nodes_visited:
                 worst_nodes_visited = nodes_visited
 
-        average_time = total_time / len(graphs)
-        average_nodes_visited = total_nodes_visited // len(graphs)
+        average_time = total_time / len(puzzles)
+        average_nodes_visited = total_nodes_visited // len(puzzles)
 
         print(f"Algorithm: {algorithm}")
         print(f"Best case nodes visited: {best_nodes_visited}")
@@ -230,9 +231,9 @@ def run_and_benchmark_algorithms(graphs):
 # making it suitable for quickly exploring deeper nodes
 # It maintains a set of visited nodes to avoid revisiting already explored states
 # If the goal state is found, it returns the number of visited nodes
-def dfs(graph):
+def dfs(g, puzzle):
     # Get the initial node from the graph
-    node = graph.get_first_node()
+    node = g.get_node(puzzle)
 
     # Initialize the frontier with the initial node
     frontier = deque()
@@ -265,15 +266,15 @@ def dfs(graph):
 # Uses a priority queue to prioritize nodes with lower costs
 # Maintains a set of visited nodes to avoid revisiting already explored states
 # If the goal state is found, returns the number of visited nodes
-def ucs(graph):
+def ucs(g, puzzle):
     # Initialize frontier as a priority queue
     frontier = PriorityQueue()
 
     # Initialize the start node, cost, entry num (to break cost ties), and add the start node to the frontier
-    start_node = graph.get_first_node()
+    node = g.get_node(puzzle)
     cost = 0
     entry_num = 0
-    frontier.put((cost, entry_num, start_node))
+    frontier.put((cost, entry_num, node))
 
     # Create a set of visited states
     visited_nodes = set()
@@ -306,14 +307,14 @@ def ucs(graph):
 # Uses a priority queue for ordered insertion to ensure that nodes at shallower depths are explored first
 # Maintains a set of visited nodes to avoid revisiting already explored states
 # If the goal state is found, returns the number of visited nodes
-def bfs(graph):
+def bfs(g, puzzle):
     # Initialize the frontier as a PriorityQueue
     frontier = PriorityQueue()
 
     # Initialize the start node, entry num (to break cost ties), and add the start node to the frontier
-    start_node = graph.get_first_node()
+    node = g.get_node(puzzle)
     entry_num = 0
-    frontier.put((calculate_manhattan_distance(start_node), entry_num, start_node))
+    frontier.put((calculate_manhattan_distance(node), entry_num, node))
 
     # Create a set of visited states
     visited_nodes = set()
@@ -343,14 +344,14 @@ def bfs(graph):
 # where g is the cost from the start node and h is the heuristic cost to the goal node
 # Maintains a set of visited nodes to avoid revisiting already explored states
 # If the goal state is found, returns the number of visited nodes
-def astar(graph):
+def astar(g, puzzle):
     # Initialize the frontier as a priority queue
     frontier = PriorityQueue()
 
     # Initialize the start node, entry num (to break cost ties), and add the start node to the frontier
-    start_node = graph.get_first_node()
+    node = g.get_node(puzzle)
     entry_num = 0
-    frontier.put((0, entry_num, start_node))
+    frontier.put((0, entry_num, node))
 
     # Create a set of visited states
     visited_nodes = set()
@@ -388,8 +389,8 @@ def astar(graph):
 
 # Main function to create graphs and run algorithms
 def main():
-    graphs = create_and_benchmark_graphs(20)
-    run_and_benchmark_algorithms(graphs)
+    graph, puzzles = create_and_benchmark_puzzles(1000)
+    run_and_benchmark_algorithms(graph, puzzles)
 
 
 if __name__ == "__main__":
