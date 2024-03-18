@@ -160,22 +160,22 @@ def create_graph():
 
 
 # Creates the "graph" and puzzles and benchmarks the time
-def create_and_benchmark_puzzles(num_puzzles):
+def create_puzzles(num_puzzles):
     graph = create_graph()
     puzzles = []
-    timer_start = time.process_time()
+    timer_start = time.perf_counter()
     for i in range(num_puzzles):
         puzzles.append(create_8_puzzle_problem())
-        print("Puzzle", i + 1, "created")
-    print(f"Total time to generate all puzzles: {(time.process_time() - timer_start):.4f} seconds")
+    print(f"{num_puzzles} puzzles created")
+    print(f"Total time to generate {num_puzzles} puzzles: {(time.perf_counter() - timer_start):.4f} seconds")
     return graph, puzzles
 
 
 def run_and_benchmark_algorithms(graph, puzzles):
     algorithms = ['DFS', 'UCS', 'BFS', 'ASTAR']
-
+    print()
     for algorithm in algorithms:
-        print()
+        print(f"Running {algorithm} on {len(puzzles)} puzzles")
         best_time = float('inf')
         worst_time = float('-inf')
         total_time = 0
@@ -185,7 +185,7 @@ def run_and_benchmark_algorithms(graph, puzzles):
 
         for index, puzzle in enumerate(puzzles):
             nodes_visited = 0
-            timer_start = time.process_time()
+            timer_start = time.perf_counter()
 
             algorithm_func = None
             match algorithm:
@@ -196,7 +196,7 @@ def run_and_benchmark_algorithms(graph, puzzles):
 
             nodes_visited += algorithm_func(graph, puzzle)
 
-            elapsed_time = time.process_time() - timer_start
+            elapsed_time = time.perf_counter() - timer_start
 
             total_time += elapsed_time
             total_nodes_visited += nodes_visited
@@ -211,6 +211,15 @@ def run_and_benchmark_algorithms(graph, puzzles):
             if nodes_visited > worst_nodes_visited:
                 worst_nodes_visited = nodes_visited
 
+            if (index + 1) % (len(puzzles) // 10) == 0:
+                percentage = ((index + 1) / len(puzzles)) * 100
+                if percentage == 10:
+                    print(f'{percentage}% complete, estimated time to completion is ~{total_time * 10:.2f} seconds')
+                else:
+                    print(f"{percentage:.0f}%", end=", ")
+
+        print(f"of the puzzles processed for {algorithm}")
+
         average_time = total_time / len(puzzles)
         average_nodes_visited = total_nodes_visited // len(puzzles)
 
@@ -221,6 +230,7 @@ def run_and_benchmark_algorithms(graph, puzzles):
         print(f"Best case execution time: {best_time:.4f}")
         print(f"Worst case execution time: {worst_time:.4f}")
         print(f"Average execution time: {average_time:.4f}")
+        print(f"Total execution time: {total_time:.4f}")
         print()
 
 
@@ -389,7 +399,7 @@ def astar(g, puzzle):
 
 # Main function to create graphs and run algorithms
 def main():
-    graph, puzzles = create_and_benchmark_puzzles(1000)
+    graph, puzzles = create_puzzles(100)
     run_and_benchmark_algorithms(graph, puzzles)
 
 
