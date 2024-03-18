@@ -399,7 +399,7 @@ def astar(g, puzzle):
 
 # Main function to create graphs and run algorithms
 def main():
-    graph, puzzles = create_puzzles(50)
+    graph, puzzles = create_puzzles(100)
     run_and_benchmark_algorithms(graph, puzzles)
 
 
