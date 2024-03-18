@@ -282,8 +282,7 @@ def ucs(g, puzzle):
 
     # Initialize the start node, cost, entry num (to break cost ties), and add the start node to the frontier
     node = g.get_node(puzzle)
-    cost = 0
-    entry_num = 0
+    cost, entry_num = 0, 0
     frontier.put((cost, entry_num, node))
 
     # Create a set of visited states
@@ -361,7 +360,7 @@ def astar(g, puzzle):
     # Initialize the start node, entry num (to break cost ties), and add the start node to the frontier
     node = g.get_node(puzzle)
     entry_num = 0
-    frontier.put((0, entry_num, node))
+    frontier.put((calculate_out_of_place_tiles(node), entry_num, node))
 
     # Create a set of visited states
     visited_nodes = set()
@@ -371,7 +370,7 @@ def astar(g, puzzle):
         # Get the node with the lowest f from the frontier
         g, _, current_node = frontier.get()
 
-        # Increment g
+        # Increment g (depth)
         g += 1
 
         # Add the current node to visited set
