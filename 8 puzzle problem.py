@@ -5,6 +5,16 @@ from queue import PriorityQueue
 from collections import deque
 
 
+class Node:
+    # Node class representing a state in the puzzle
+    def __init__(self, state):
+        self.state = state
+        self.edges = []
+
+    def add_edge(self, node):
+        self.edges.append(node)
+
+
 # Creates a graph class, which is a Graph of Nodes for the 8-puzzle problem, each Node representing a state
 class Graph:
     # Initialize a dict
@@ -32,16 +42,6 @@ class Graph:
         for index, k in enumerate(self.nodes):
             if k == key:
                 return index
-
-
-class Node:
-    # Node class representing a state in the puzzle
-    def __init__(self, state):
-        self.state = state
-        self.edges = []
-
-    def add_edge(self, node):
-        self.edges.append(node)
 
 
 # Generates a solvable random 8-puzzle problem
