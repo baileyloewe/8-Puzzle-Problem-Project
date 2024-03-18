@@ -160,13 +160,13 @@ def create_graph():
 # Creates multiple graphs and benchmarks the time
 def create_and_benchmark_graphs(num_graphs):
     graphs = []
-    timer_start = time.time()
+    timer_start = time.process_time()
     for i in range(num_graphs):
         graph = create_graph()
         create_edges(graph)
         print("Graph", i + 1, "created based on puzzle:", next(iter(graph.nodes)))
         graphs.append(graph)
-    print("Total time to generate all graphs: {:.2f} seconds".format(time.time() - timer_start))
+    print("Total time to generate all graphs: {:.2f} seconds".format(time.process_time() - timer_start))
     return graphs
 
 
@@ -184,7 +184,7 @@ def run_and_benchmark_algorithms(graphs):
 
         for index, graph in enumerate(graphs):
             nodes_visited = 0
-            timer_start = time.time()
+            timer_start = time.process_time()
 
             algorithm_func = None
             match algorithm:
@@ -195,8 +195,7 @@ def run_and_benchmark_algorithms(graphs):
 
             nodes_visited += algorithm_func(graph)
 
-            timer_end = time.time()
-            elapsed_time = timer_end - timer_start
+            elapsed_time = time.process_time() - timer_start
 
             total_time += elapsed_time
             total_nodes_visited += nodes_visited
