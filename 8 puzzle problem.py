@@ -166,7 +166,7 @@ def create_and_benchmark_graphs(num_graphs):
         create_edges(graph)
         print("Graph", i + 1, "created based on puzzle:", next(iter(graph.nodes)))
         graphs.append(graph)
-    print("Total time to generate all graphs: {:.2f} seconds".format(time.process_time() - timer_start))
+    print(f"Total time to generate all graphs: {(time.process_time() - timer_start):.4f} seconds")
     return graphs
 
 
